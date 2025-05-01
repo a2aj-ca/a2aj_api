@@ -2,7 +2,7 @@ from fastapi import FastAPI, Body
 import os
 from pymongo import MongoClient
 from pydantic import BaseModel
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Union
 
 # Check if var is in the environment
 # MONGO_DB is local, MONGO_URL is production
@@ -28,7 +28,7 @@ class Decision(BaseModel):
     source_url: str
     scraped_timestamp: Optional[str] = None
     unofficial_text: Optional[str] = None
-    other: Optional[Dict[str, Any]] = None
+    other: Optional[Union[Dict[str, Any], str]] = None
 
 # Hello world
 @app.get("/")
