@@ -22,6 +22,7 @@ This example starts up a [FastAPI](https://fastapi.tiangolo.com/) server.
 
 - Clone locally and install packages with pip using `pip install -r requirements.txt`
 - Run locally using `hypercorn main:app --reload`
+- Run on codespaces: python -m hypercorn main:app --reload
 
 ## 📝 Notes
 

@@ -20,11 +20,11 @@ collection = db['decisions']
 app = FastAPI()
 
 @app.get("/")
-async def root():
+def root():
     # return items in collection
     items = collection.find()
     items_list = []
     for item in items:
-        items_list.append(item)
+        items_list.append(item['text'])
     return items_list
     
