@@ -1,6 +1,9 @@
 from fastapi import FastAPI
 import os
 from pymongo import MongoClient
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Check if production or development
 DB_URL = os.getenv("MONGO_DB") or os.getenv("MONGO_URL")
