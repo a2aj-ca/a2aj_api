@@ -4,7 +4,9 @@ from pymongo import MongoClient
 
 # Check if production or development
 if os.getenv("MONGO_DB") == None:
-    DB_URL = "mongodb.railway.internal"
+    # MongoDB is not set in Railway
+    # Get the MongoDB URL from the environment variable in Railway
+    DB_URL = os.getenv("MONGO_URL")
 else:
     DB_URL = os.getenv("MONGO_DB")
 
