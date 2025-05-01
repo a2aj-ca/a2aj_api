@@ -3,12 +3,10 @@ import os
 from pymongo import MongoClient
 
 # Check if production or development
-if os.getenv("MONGO_DB") == None:
-    # MongoDB is not set in Railway
-    # Get the MongoDB URL from the environment variable in Railway
-    DB_URL = os.getenv("MONGO_URL")
-else:
-    DB_URL = os.getenv("MONGO_DB")
+DB_URL = os.getenv("MONGO_DB") or os.getenv("MONGO_URL")
+    
+if not DB_URL:
+    raise ValueError("No MongoDB connection string found in environment variables")
 
 # Connect to MongoDB
 client = MongoClient(DB_URL)
