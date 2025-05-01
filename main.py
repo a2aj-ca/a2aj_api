@@ -40,6 +40,7 @@ def root():
         items_list.append(item['text'])
     return items_list
 
+# Post a single decision
 @app.post("/decisions/", status_code=201)
 def create_decision(decision: Decision = Body(...)):
     # Insert the decision into the collection
