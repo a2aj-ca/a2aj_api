@@ -34,11 +34,8 @@ class Decision(BaseModel):
 @app.get("/")
 def root():
     # return items in collection
-    items = collection.find()
-    items_list = []
-    for item in items:
-        items_list.append(item['text'])
-    return items_list
+    num_items = collection.count_documents({})
+    return f'There are {num_items} items in the collection.'
 
 # Post a single decision
 @app.post("/decisions/", status_code=201)
