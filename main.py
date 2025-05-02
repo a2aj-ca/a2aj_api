@@ -62,6 +62,16 @@ def get_decision_by_citation(citation: str):
 
 @app.post("/upload/", status_code=201)
 def create_decision(data: dict = Body(...)):
+    # Define required fields
+    required_name = ('name_en' in data or 'name_fr' in data)
+    required_citation = ('citation_en' in data or 'citation_fr' in data)
+    required_dataset = ('dataset' in data)
+    required_text = ('unofficial_text_en' in data or 'unofficial_text_fr' in data)
+
+    # Check if all required fields are present
+    if not (required_name and required_citation and required_dataset and required_text):
+        return {"message": "Missing required fields: name, citation, dataset, or text"}
+
     # Insert whatever JSON is provided directly into MongoDB
     result = collection.insert_one(data)
     
