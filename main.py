@@ -42,7 +42,7 @@ def root():
 @app.get("/decisions/")
 def list_decisions():
     # Get all documents in the collection
-    decisions = list(collection.find({}, {"citation": 1, "name": 1, "dataset": 1, "document_date": 1, "_id": 0}))
+    decisions = list(collection.find({}, {"citation_en": 1, "citation2_en": 1, "citation_fr":1, "citation2_fr":1, "name_en": 1, "name_fr":1, "dataset": 1, "document_date_en": 1, "docuemt_date_fr":1, "_id": 0}))
     return decisions
 
 # list tribunals
@@ -58,7 +58,16 @@ def get_decision(decision_name: str):
     # Find the decision by name
     entry = collection.find_one({"name": decision_name})
     if entry:
-        # Remove the "_id" field from the result
+        # check if the entry has a num_download field, create it if it doesn't, and update the collection
+        if 'num_download' in entry:
+            # if it does, increment it by 1
+            entry['num_download'] += 1
+            collection.update_one({"_id": entry["_id"]}, {"$set": {"num_download": entry['num_download']}})
+        else:
+            # if it doesn't, create it and set it to 1
+            entry['num_download'] = 1
+            collection.update_one({"_id": entry["_id"]}, {"$set": {"num_download": 1}})
+        # Remove the "_id" field from the result before returning
         entry.pop("_id", None)
         return entry
     else:
@@ -126,7 +135,6 @@ def upload_decision(data: dict = Body(...)):
     transformed_data = {}
     for key in data.keys():
         if key == 'language':
-            transformed_data['language'] = data[key]
             continue
         if key == 'dataset':
             transformed_data['dataset'] = data[key]
