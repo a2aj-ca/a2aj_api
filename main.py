@@ -12,6 +12,22 @@ client = MongoClient(DB_URL)
 db = client["test"]
 collection = db['decisions']
 
+# helper function to check all of the citation fields
+def search_citation(citation: str):
+    # Find the decision by citation
+    decision = collection.find_one({"citation_en": citation})
+    if decision:
+        return decision
+    elif collection.find_one({"citation_en": citation}):
+        return collection.find_one({"citation_en": citation})
+    elif collection.find_one({"citation_fr": citation}):
+        return collection.find_one({"citation_fr": citation})
+    elif collection.find_one({"citation": citation}):
+        return collection.find_one({"citation": citation})
+    else:
+        return None
+
+
 # Create FastAPI app
 app = FastAPI()
 
@@ -52,13 +68,13 @@ def get_decision(decision_name: str):
 @app.get("/decisions/citation/{citation}")
 def get_decision_by_citation(citation: str):
     # Find the decision by citation
-    decision = collection.find_one({"citation": citation})
-    if decision:
-        # Remove the "_id" field from the result
+    decision = search_citation(citation)
+    # Check if the decision was found
+    if decision == None:
+        return {"message": f"Decision with citation '{citation}' not found"}
+    else:
         decision.pop("_id", None)
         return decision
-    else:
-        return {"message": f"Decision with citation '{citation}' not found"}
 
 @app.post("/upload/", status_code=201)
 def create_decision(data: dict = Body(...)):
@@ -71,9 +87,13 @@ def create_decision(data: dict = Body(...)):
     # Check if all required fields are present
     if not (required_name and required_citation and required_dataset and required_text):
         return {"message": "Missing required fields: name, citation, dataset, or text"}
+    
+    # check if the entry already exists
+    if search_citation(data.get('citation_en', data.get('citation_fr', data.get('citation')))):
+        return {"message": "Decision with this citation already exists"}
 
     # Insert whatever JSON is provided directly into MongoDB
-    result = collection.insert_one(data)
+    result = collection.insert_one(data.to_dict())
     
     # Return the created document with its ID
     return {
