@@ -74,6 +74,10 @@ def get_decision_by_citation(citation: str):
         entry.pop("_id", None)
         return entry
 
+# takes an entry and checks whether it meets minimum data model requirements
+# checks whether the entry exists in the database
+# if it does not, creates the entry
+# if it does, updates the entry
 @app.post("/upload/", status_code=201)
 def create_decision(data: dict = Body(...)):
     # Define required fields
@@ -103,3 +107,68 @@ def create_decision(data: dict = Body(...)):
             "id": str(search_res["_id"]),
             "message": "Document updated successfully"
         }
+    
+# upload v2
+@app.post("/upload_v2/", status_code=201)
+def upload_decision(data: dict = Body(...)):
+    # Define required fields
+    name = data.get('name')
+    citation = data.get('citation')
+    dataset = data.get('dataset')
+    language = data.get('language')
+
+    # Check if all required fields are present
+    if not (name and citation and dataset and language):
+        return {"message": "Missing required fields: name, citation, dataset, or language"}
+    
+    # transform the data to the correct format
+    # rename each key to include _en or _fr, depending on the language
+    transformed_data = {}
+    for key in data.keys():
+        if key == 'language':
+            transformed_data['language'] = data[key]
+            continue
+        if key == 'dataset':
+            transformed_data['dataset'] = data[key]
+            continue
+        transformed_data[f'{key}_{language}'] = data[key]
+    
+    # check if the entry already exists
+    search_res = search_citation(transformed_data.get('citation_en', transformed_data.get('citation_fr', transformed_data.get('citation2_en', transformed_data.get('citation2_fr')))))
+    if search_res != None:
+        collection.update_one(
+            {"_id": search_res["_id"]},
+            {"$set": transformed_data}
+        )
+        return {
+            "id": str(search_res["_id"]),
+            "message": "Document updated successfully"
+        }
+    else:
+        # check if the entry exists, but was uploaded in a different language
+        if 'SCR' in citation:
+            citation = citation.replace('SCR', 'RCS')
+        elif 'RCS' in citation:
+            citation = citation.replace('RCS', 'SCR')
+        elif 'SCC' in citation:
+            citation = citation.replace('SCC', 'CSC')
+        elif 'CSC' in citation:
+            citation = citation.replace('CSC', 'SCC')
+        
+        search_res = search_citation(citation)
+        if search_res != None:
+            collection.update_one(
+                {"_id": search_res["_id"]},
+                {"$set": transformed_data}
+            )
+            return {
+                "id": str(search_res["_id"]),
+                "message": "Document updated successfully"
+            }
+        else:
+            # new entry
+            new_entry = collection.insert_one(transformed_data)
+            return {
+                "id": str(new_entry.inserted_id),
+                "message": "Document created successfully"
+            }
