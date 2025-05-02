@@ -1,30 +1,23 @@
----
-title: FastAPI
-description: A FastAPI server
-tags:
-  - fastapi
-  - hypercorn
-  - python
----
+# A2AJ API
+Use this API to upload and access decisions in the RLL Bulk Dataset.
 
-# FastAPI Example
-
-This example starts up a [FastAPI](https://fastapi.tiangolo.com/) server.
-
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/-NvLj4?referralCode=CRJ8FE)
-## ✨ Features
-
-- FastAPI
-- [Hypercorn](https://hypercorn.readthedocs.io/)
-- Python 3
-
-## 💁‍♀️ How to use
-
-- Clone locally and install packages with pip using `pip install -r requirements.txt`
+## How to use
 - Run locally using `hypercorn main:app --reload`
 - Run on codespaces: python -m hypercorn main:app --reload
 
-## 📝 Notes
+## How to insert a document
 
-- To learn about how to use FastAPI with most of its features, you can visit the [FastAPI Documentation](https://fastapi.tiangolo.com/tutorial/)
-- To learn about Hypercorn and how to configure it, read their [Documentation](https://hypercorn.readthedocs.io/)
+### Insert a single document
+
+Current behaviour: 
+- uploads document (json must match schema in RLL bulk dataset), checks if it exists in the dataset, if it does not, inserts it.
+- only can upload one decision at a time
+
+import requests
+
+url = "https://a2ajapi-production.up.railway.app/decisions/"
+res = requests.post(url, json.loads(sample)[0])
+
+print(res.status_code)
+
+
