@@ -56,25 +56,23 @@ def list_tribunals():
 @app.get("/decisions/name/{decision_name}")
 def get_decision(decision_name: str):
     # Find the decision by name
-    decision = collection.find_one({"name": decision_name})
-    if decision:
+    entry = collection.find_one({"name": decision_name})
+    if entry:
         # Remove the "_id" field from the result
-        decision.pop("_id", None)
-        return decision
+        entry.pop("_id", None)
+        return entry
     else:
         return {"message": f"Decision '{decision_name}' not found"}
 
 # get a single decision by citation
 @app.get("/decisions/citation/{citation}")
 def get_decision_by_citation(citation: str):
-    # Find the decision by citation
-    decision = search_citation(citation)
-    # Check if the decision was found
-    if decision == None:
+    entry = search_citation(citation)
+    if entry == None:
         return {"message": f"Decision with citation '{citation}' not found"}
     else:
-        decision.pop("_id", None)
-        return decision
+        entry.pop("_id", None)
+        return entry
 
 @app.post("/upload/", status_code=201)
 def create_decision(data: dict = Body(...)):
@@ -89,14 +87,19 @@ def create_decision(data: dict = Body(...)):
         return {"message": "Missing required fields: name, citation, dataset, or text"}
     
     # check if the entry already exists
-    if search_citation(data.get('citation_en', data.get('citation_fr', data.get('citation')))):
-        return {"message": "Decision with this citation already exists"}
-
-    # Insert whatever JSON is provided directly into MongoDB
-    result = collection.insert_one(data.to_dict())
-    
-    # Return the created document with its ID
-    return {
-        "id": str(result.inserted_id),
-        "message": "Document created successfully"
-    }
+    search_res = search_citation(data.get('citation_en', data.get('citation_fr', data.get('citation2_en', data.get('citation2_fr')))))
+    if search_res == None:
+        new_entry = collection.insert_one(data.to_dict())
+        return {
+            "id": str(new_entry.inserted_id),
+            "message": "Document created successfully"
+        }
+    else:
+        collection.update_one(
+            {"_id": search_res["_id"]},
+            {"$set": data}
+        )
+        return {
+            "id": str(search_res["_id"]),
+            "message": "Document updated successfully"
+        }
