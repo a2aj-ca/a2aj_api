@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Body
+from fastapi import FastAPI, Request, Body
 import os
 from pymongo import MongoClient
 
@@ -40,7 +40,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # Hello world
 @app.get("/")
 @limiter.limit("5/minute")
-def root():
+def root(request: Request):
     # return items in collection
     num_items = collection.count_documents({})
     return f'There are {num_items} items in the collection.'
