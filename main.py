@@ -1,7 +1,10 @@
 from fastapi import FastAPI, Body
 import os
 from pymongo import MongoClient
-from typing import Optional, List, Dict, Any, Union
+
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 # Check if var is in the environment
 # MONGO_DB is local, MONGO_URL is production
@@ -28,11 +31,15 @@ def search_citation(citation: str):
         return None
 
 
-# Create FastAPI app
+# Create FastAPI app with limiter
+limiter = Limiter(key_func=get_remote_address)
 app = FastAPI()
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Hello world
 @app.get("/")
+@limiter.limit("5/minute")
 def root():
     # return items in collection
     num_items = collection.count_documents({})
@@ -129,6 +136,11 @@ def upload_decision(data: dict = Body(...)):
     # Check if all required fields are present
     if not (name and citation and dataset and language):
         return {"message": "Missing required fields: name, citation, dataset, or language"}
+    
+    # remove fields that are NaN or ""
+    for key in data.keys():
+        if data[key] == "" or data[key] == None:
+            del data[key]
     
     # transform the data to the correct format
     # rename each key to include _en or _fr, depending on the language
